@@ -499,6 +499,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         hiddenApps = new HashSet<>(cfg.hiddenApps);
 
         grid = findViewById(R.id.grid);
+        if (cfg.minimalDock && cfg.dockRow) {
+            // Apply the narrower grid width before RecyclerView creates its first holders. Their
+            // tile sizes are measured at creation; changing the padding later leaves wide banners
+            // overlapping in the lower rows until the holders are recreated.
+            ViewGroup content = (ViewGroup) ((View) grid.getParent()).getParent();
+            int width = getResources().getDisplayMetrics().widthPixels
+                    - content.getPaddingLeft() - content.getPaddingRight();
+            int side = Math.max((int) (10 * density), Math.round(width * 0.17f));
+            grid.setPadding(side, grid.getPaddingTop(), side, grid.getPaddingBottom());
+        }
         rtlAppGrid = getResources().getBoolean(R.bool.rtl_app_grid);
         // Mirror only the app grid; the header and other locales keep their own layouts.
         // single_row: one span laid out sideways, so the same adapter, glass and dock band serve a scrolling row.
@@ -572,7 +582,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         });
         if (dockRow) grid.addItemDecoration(new DockDecoration(COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding, cfg.dockBand,
-                singleRow, cfg.dockBandAll));
+                singleRow, cfg.dockBandAll, cfg.minimalDock));
         if (cfg.fadeRows) TopFade.attach(grid, 48 * density);
         // Reduced motion: the tiles are simply there, with no entrance (reloadApps skips it there too).
         if (animations && !reducedMotion) {
@@ -591,9 +601,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int rowsBelowDock = cfg.rowsBelowDock;
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int h = b - t;
+            // Minimal dock: keep the icon row in a centered, narrower band. This also makes the
+            // hidden grid below the dock use the same column width when the user presses Down.
+            int side = cfg.minimalDock && cfg.dockRow
+                    ? Math.max((int) (10 * density), Math.round((r - l) * 0.17f))
+                    : grid.getPaddingLeft();
             // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
-            int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
-            int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
+            int inner = (r - l) - side * 2;
+            int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, cfg.minimalDock, density);
             int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileW), density);
             int dockRow = itemH + (int) (AppAdapter.DOCK_EXTRA_DP * density);   // item height plus DockDecoration offsets
             int gridRows = itemH * rowsBelowDock;
@@ -609,13 +624,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // A single row never shows the names under its tiles (the title above the row names the app), so the
             // 7dp gap and 22dp label item_app.xml keeps for them would only lift the row: sit it that much lower.
             if (singleRow && !cfg.alwaysShowNames) want += (int) (29 * density);
-            if (grid.getPaddingTop() != want) {
-                grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
+            if (grid.getPaddingTop() != want || grid.getPaddingLeft() != side || grid.getPaddingRight() != side) {
+                boolean widthChanged = grid.getPaddingLeft() != side || grid.getPaddingRight() != side;
+                grid.setPadding(side, want, side, grid.getPaddingBottom());
                 // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
                 // row cannot scroll vertically, and the layout request made from inside this layout pass is
                 // dropped, so lay the row out again on the next frame. The glass and the title were placed for the
                 // old position, so fit them again once it has moved.
-                if (singleRow) grid.post(() -> {
+                if (singleRow || widthChanged) grid.post(() -> {
                     grid.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                         @Override
                         public void onGlobalLayout() {

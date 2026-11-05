@@ -72,6 +72,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         final String pkg;
         final Drawable banner;
         final Drawable icon;
+        /** Loaded only for dock apps that normally show a banner. */
+        Drawable dockIcon;
         /** Text under the tile when it is focused in the grid: the label, plus the caption for a card. */
         final String name;
         /** Ambient glow colour; 0 until sampled from the banner, or the card's accent from the start. */
@@ -104,11 +106,16 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
      * highlight, capped at the design size so 4 columns on a 1080p TV look exactly as before.
      */
     static int tileWidthPx(int innerWidthPx, int columns, float density) {
+        return tileWidthPx(innerWidthPx, columns, false, density);
+    }
+
+    /** Minimal dock uses smaller cards so eight columns still fit on a 720p TV. */
+    static int tileWidthPx(int innerWidthPx, int columns, boolean minimalDock, float density) {
         int design = Math.round(DESIGN_W_DP * density);
         if (innerWidthPx <= 0 || columns <= 0) return design;
         int cell = innerWidthPx / columns;
         int fit = (int) ((cell - 12 * density) / FOCUS_SCALE);
-        return Math.max(Math.round(80 * density), Math.min(design, fit));
+        return Math.max(Math.round((minimalDock ? 44 : 80) * density), Math.min(design, fit));
     }
 
     static int tileHeightPx(int tileWidthPx) {
@@ -153,7 +160,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
      */
     static int tileWidthPx(int innerWidthPx, int gridHeightPx, int columns, int rowsBelowDock, boolean dockTitle,
                            boolean dockRow, float density) {
-        int w = tileWidthPx(innerWidthPx, columns, density);
+        return tileWidthPx(innerWidthPx, gridHeightPx, columns, rowsBelowDock, dockTitle, dockRow, false, density);
+    }
+
+    static int tileWidthPx(int innerWidthPx, int gridHeightPx, int columns, int rowsBelowDock, boolean dockTitle,
+                           boolean dockRow, boolean minimalDock, float density) {
+        int w = tileWidthPx(innerWidthPx, columns, minimalDock, density);
         if (gridHeightPx <= 0 || rowsBelowDock <= 0) return w;
         float reserved = (dockRow ? DOCK_EXTRA_DP + BOTTOM_ROOM_DP + (dockTitle ? TITLE_ROOM_DP : 0)
                 : TOP_ROOM_DP + COMPACT_BOTTOM_ROOM_DP) * density;
@@ -163,7 +175,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // Shrink at most to MIN_HEIGHT_FIT of the width-only size. Below that the tiles look lost in their wide
         // columns (2 rows under a titled dock came out at 80dp); the rows that still don't fit run off the bottom
         // and scroll, and MainActivity keeps the title's room above the dock.
-        return Math.max(Math.max(Math.round(80 * density), Math.round(w * MIN_HEIGHT_FIT)), Math.min(w, byHeight));
+        return Math.max(Math.max(Math.round((minimalDock ? 44 : 80) * density), Math.round(w * MIN_HEIGHT_FIT)), Math.min(w, byHeight));
     }
 
     /** The smallest share of the width-only tile size that fitting rows_below_dock into the height may go to. */
@@ -216,6 +228,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Map<String, String> appLabels, appBanners;
     /** Every app tile is its icon on a card tinted from that icon, never its banner (config.xml, uniform_tiles). */
     private final boolean uniformTiles;
+    private final boolean minimalDock;
     private final List<Entry> items = new ArrayList<>();
 
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
@@ -243,6 +256,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.appLabels = cfg.appLabels;
         this.appBanners = cfg.appBanners;
         this.uniformTiles = cfg.uniformTiles;
+        this.minimalDock = cfg.minimalDock && cfg.dockRow;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
@@ -399,7 +413,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         float density = parent.getResources().getDisplayMetrics().density;
         int width = parent.getWidth() > 0 ? parent.getWidth() : parent.getMeasuredWidth();
         int inner = width - parent.getPaddingLeft() - parent.getPaddingRight();
-        int w = tileWidthPx(inner, parent.getHeight(), dockSize, rowsBelowDock, dockTitle, dockRow, density), h = tileHeightPx(w);
+        int w = tileWidthPx(inner, parent.getHeight(), dockSize, rowsBelowDock, dockTitle, dockRow, minimalDock, density), h = tileHeightPx(w);
         View card = v.findViewById(R.id.card);
         ViewGroup.LayoutParams cardLp = card.getLayoutParams();
         cardLp.width = w;
@@ -451,6 +465,20 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // The dock has no labels, unless always_show_names asks for them (DockDecoration then makes room in the band).
         // In a single row every tile is the dock's kind: the big title above names it.
         boolean dockKind = dockRow && (singleRow || position < dockSize);
+        if (minimalDock) {
+            // Holders move between the dock and grid as apps are reordered, so restore the
+            // regular icon size when a holder leaves the compact row.
+            FrameLayout.LayoutParams iconLp = (FrameLayout.LayoutParams) h.icon.getLayoutParams();
+            boolean compactIcon = dockKind && e.kind == Entry.APP;
+            int cardHeight = h.card.getLayoutParams().height;
+            int size = compactIcon ? Math.round(cardHeight * 0.68f)
+                    : uniformTiles ? Math.round(cardHeight * ICON_SHARE)
+                    : Math.round(48 * ctx.getResources().getDisplayMetrics().density);
+            iconLp.width = iconLp.height = size;
+            iconLp.bottomMargin = compactIcon || uniformTiles ? 0
+                    : Math.round(14 * ctx.getResources().getDisplayMetrics().density);
+            h.icon.setLayoutParams(iconLp);
+        }
         h.name.setVisibility(dockKind && restNameAlpha == 0f ? View.INVISIBLE : View.VISIBLE);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
         h.name.setAlpha(focused ? 1f : restNameAlpha);
@@ -463,11 +491,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
-        if (uniformTiles && e.banner == null) {
+        if (minimalDock && dockKind && e.kind == Entry.APP) {
+            h.card.setBackground(null);
+        } else if (uniformTiles && e.banner == null) {
             if (e.backdrop == null) e.backdrop = backdrop(e.icon, ambientColorAt(position));
             h.card.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, e.backdrop));
         }
-        if (e.banner != null) {
+        if (e.banner != null && !(minimalDock && dockKind && e.kind == Entry.APP)) {
             h.banner.setImageDrawable(e.banner);
             h.banner.setVisibility(View.VISIBLE);
             h.icon.setVisibility(View.GONE);
@@ -475,10 +505,19 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else {
             h.banner.setImageDrawable(null);
             h.banner.setVisibility(View.GONE);
-            h.icon.setImageDrawable(e.icon);
+            Drawable icon = e.icon;
+            if (minimalDock && dockKind && e.kind == Entry.APP && icon == null) {
+                if (e.dockIcon == null) {
+                    try {
+                        e.dockIcon = ctx.getPackageManager().getActivityIcon(e.component);
+                    } catch (PackageManager.NameNotFoundException ignored) { }
+                }
+                icon = e.dockIcon;
+            }
+            h.icon.setImageDrawable(icon);
             h.icon.setVisibility(View.VISIBLE);
             h.label.setText(e.label);
-            h.label.setVisibility(uniformTiles ? View.GONE : View.VISIBLE);
+            h.label.setVisibility(uniformTiles || minimalDock && dockKind ? View.GONE : View.VISIBLE);
         }
         h.card.setOnClickListener(v -> launch(e));
         h.card.setOnLongClickListener(v -> {
