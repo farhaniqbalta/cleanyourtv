@@ -32,6 +32,18 @@ pushes it with `theme.sh`.
 Every theme folder has a `screenshot.jpg` of Home with that theme on a real TV. `tools/theme.sh` never
 pushes it; it is only here so you can see a theme before you try it.
 
+## Revert a theme
+
+To remove `minimalism_han` or any other theme and return to the built-in look, connect to the TV
+with debugging enabled and run `TV_HOST=192.168.1.50 tools/theme.sh --reset` (replace the example
+address with your TV's current IP). This removes the active
+theme's wallpaper and picker collection and restores the built-in config; it does not uninstall
+the launcher. To return to the theme later, run
+`TV_HOST=192.168.1.50 tools/theme.sh themes/minimalism_han` with the same IP replacement.
+
+If your TV uses a local wrapper that adds Home redirect settings when applying themes, use that
+same wrapper for the reset so those settings are preserved.
+
 ## Keys
 
 Every key is optional; a missing key keeps the value from `config.xml`, an unknown or wrongly typed key
