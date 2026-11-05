@@ -69,4 +69,14 @@ public class TileFitTest {
         assertTrue(AppAdapter.tileWidthPx(INNER, GRID_H, 4, 1, false, true, D)
                 > AppAdapter.tileWidthPx(INNER, GRID_H, 4, 1, true, true, D));
     }
+
+    @Test
+    public void minimalDockCardsFitEightNarrowColumnsOnA720pTv() {
+        float density = 1.5f;
+        int inner = 770;
+        int cell = inner / 8;
+        int w = AppAdapter.tileWidthPx(inner, 600, 8, 0, false, true, true, density);
+        assertTrue(w < Math.round(80 * density));
+        assertTrue(w * AppAdapter.FOCUS_SCALE + 12 * density <= cell + 1);
+    }
 }
