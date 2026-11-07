@@ -107,4 +107,20 @@
     <string name="race_live">%1$s · langsung</string>
     <string name="race_finished">Bendera finis</string>
     <string name="last_opened">Terakhir dibuka %1$s</string>
+    <string name="weather_toggle">Tampilkan cuaca di Beranda: %1$s</string>
+    <string name="weather_city">Kota cuaca: %1$s</string>
+    <string name="weather_city_missing">Pilih kota</string>
+    <string name="weather_search">Cari kota</string>
+    <string name="weather_search_action">Cari</string>
+    <string name="weather_no_results">Kota tidak ditemukan atau jaringan tidak tersedia</string>
+    <string name="weather_on">Aktif</string>
+    <string name="weather_off">Nonaktif</string>
+    <string name="weather_follow_theme">Cuaca: ikuti tema</string>
+    <string name="weather_clear">Cerah</string>
+    <string name="weather_cloudy">Berawan</string>
+    <string name="weather_fog">Berkabut</string>
+    <string name="weather_snow">Salju</string>
+    <string name="weather_thunderstorm">Badai petir</string>
+    <string name="weather_rain">Hujan</string>
+    <string name="weather_unknown">Cuaca</string>
 </resources>

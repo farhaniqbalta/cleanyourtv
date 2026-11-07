@@ -23,6 +23,7 @@ import java.util.List;
 public final class LauncherSettingsActivity extends Activity {
     static final String EXTRA_REORDER = "com.gathin.tvhome.extra.REORDER_FROM_SETTINGS";
     private SharedPreferences choices;
+    private WeatherSettings weatherSettings;
     private final TextView[] columnChoices = new TextView[4];
     private final TextView[] rowChoices = new TextView[4];
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
@@ -44,6 +45,7 @@ public final class LauncherSettingsActivity extends Activity {
         setContentView(R.layout.activity_launcher_settings);
         choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         Config config = Config.load(this);
+        weatherSettings = new WeatherSettings(this, choices, config.weatherEnabled, this::changed);
         View reorderChoice = findViewById(R.id.reorderChoice);
         reorderChoice.setVisibility(config.launcherSettingsButton ? View.VISIBLE : View.GONE);
         reorderChoice.setOnClickListener(v -> {
@@ -260,6 +262,16 @@ public final class LauncherSettingsActivity extends Activity {
         setResult(RESULT_OK);
         choices.edit().putLong(Config.SETTINGS_REVISION_KEY,
                 choices.getLong(Config.SETTINGS_REVISION_KEY, 0) + 1).apply();
+    }
+
+    @Override protected void onDestroy() {
+        if (weatherSettings != null) weatherSettings.close();
+        super.onDestroy();
+    }
+
+    @Override protected void onPause() {
+        if (weatherSettings != null) weatherSettings.cancelSearch();
+        super.onPause();
     }
 
     private void setAdvanced(boolean enabled) {

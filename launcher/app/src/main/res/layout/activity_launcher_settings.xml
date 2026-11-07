@@ -117,6 +117,13 @@
             android:layout_marginTop="28dp"
             android:visibility="gone" />
 
+        <TextView android:id="@+id/weatherChoice" style="@style/SettingsRow"
+            android:layout_marginTop="18dp" />
+        <TextView android:id="@+id/weatherCityChoice" style="@style/SettingsRow"
+            android:layout_marginTop="8dp" />
+        <TextView android:id="@+id/weatherFollowThemeChoice" style="@style/SettingsRow"
+            android:layout_marginTop="8dp" android:text="@string/weather_follow_theme" />
+
         <TextView
             android:id="@+id/followThemeChoice"
             style="@style/SettingsRow"

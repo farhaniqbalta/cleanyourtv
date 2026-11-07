@@ -45,6 +45,7 @@ fits the rules; keys from before the rule sit on its wanted list until a screens
 | `dock_band_all` | <img src="switches/single_row.jpg" width="320" alt="dock_band_all on a TV"> |
 | `uniform_tiles` | <img src="switches/uniform_tiles.jpg" width="320" alt="uniform_tiles on a TV"> |
 | `minimal_dock` | <img src="../themes/minimalism_han/screenshot.jpg" width="320" alt="minimal_dock on a TV"> |
+| `weather_enabled` | <img src="switches/weather_enabled.jpg" width="320" alt="Four upcoming weather forecasts on a TV; cropped to protect the city"> |
 | `lunar_date` | <img src="switches/lunar_date.jpg" width="320" alt="lunar_date on a TV"> |
 | `dock_band` | <img src="switches/dock_band.jpg" width="320" alt="dock_band on a TV"> |
 | `show_library_pill` | <img src="switches/show_library_pill.jpg" width="320" alt="show_library_pill on a TV"> |

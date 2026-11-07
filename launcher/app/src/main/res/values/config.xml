@@ -214,6 +214,8 @@
     <!-- The date (with the Shamsi and lunar lines) on its own line under the clock instead of beside it, for a top bar
          whose pills leave the date too little room. Can also be set with "date_below_clock" in a theme. -->
     <bool name="date_below_clock">false</bool>
+    <!-- Optional weather header; a theme may set weather_enabled. -->
+    <bool name="weather_enabled">false</bool>
 
     <!-- A name after the greeting: "Mr. Trịnh" shows GOOD MORNING, MR. TRỊNH. Empty: the greeting alone. -->
     <string name="greeting_name" translatable="false"></string>

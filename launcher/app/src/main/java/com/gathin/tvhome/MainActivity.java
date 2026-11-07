@@ -95,6 +95,7 @@ import java.util.Set;
  * tvOS style home: black, a pinned dock row, an app grid, and one glass highlight that springs between tiles.
  */
 public class MainActivity extends Activity implements AppAdapter.TileListener {
+    private WeatherController weatherController;
 
     private static final int LAUNCHER_SETTINGS_REQUEST = 42;
     /** Sent by QuickSettingsActivity: open Launcher settings from here so Home rebuilds when they close. */
@@ -110,7 +111,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * 2025-01-01. TVs without a clock battery boot at the epoch (08:00 in China) and keep it until network
      * time arrives; the clock, date and greeting stay hidden before then.
      */
-    private static final long TIME_VALID_AFTER_MS = 1_735_689_600_000L;
+    static final long TIME_VALID_AFTER_MS = 1_735_689_600_000L;
     private String liveTvPkg;
     /** Launcher settings' change count this Home was built with (see onResume). */
     private long settingsRevision;
@@ -487,6 +488,34 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (lunar) lunarDate.setVisibility(View.VISIBLE);
         greetingName = cfg.greetingName;
         if (cfg.dateBelowClock) moveDateBelowClock();
+        if (cfg.weatherEnabled) {
+            WeatherView weather = new WeatherView(this);
+            View left = findViewById(R.id.leftBlock);
+            View statsView = findViewById(R.id.stats);
+            FrameLayout.LayoutParams weatherLayout = new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            root.addView(weather, weatherLayout);
+            // Overlay the header: its height must not change the grid's layout or dock position.
+            root.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+                int[] origin = new int[2], position = new int[2];
+                root.getLocationOnScreen(origin);
+                left.getLocationOnScreen(position);
+                int x = position[0] - origin[0];
+                int y = position[1] - origin[1] + left.getHeight();
+                if (statsView.getVisibility() == View.VISIBLE) {
+                    statsView.getLocationOnScreen(position);
+                    y = Math.max(y, position[1] - origin[1] + statsView.getHeight());
+                }
+                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) weather.getLayoutParams();
+                if (lp.leftMargin != x || lp.topMargin != y || lp.width != left.getWidth()) {
+                    lp.leftMargin = x;
+                    lp.topMargin = y;
+                    lp.width = left.getWidth();
+                    weather.setLayoutParams(lp);
+                }
+            });
+            weatherController = new WeatherController(weather);
+        }
         if (shamsi) {
             shamsiDate.setVisibility(View.VISIBLE);
             TextView date = findViewById(R.id.date);
@@ -944,6 +973,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             recreate();
             return;
         }
+        if (weatherController != null) weatherController.resume();
         restartIdleClock();
         promptsPaused = false;
         if (grid.getAdapter() == null) grid.setAdapter(adapter);   // dropped by onTrimMemory
@@ -1143,6 +1173,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onPause() {
         super.onPause();
+        if (weatherController != null) weatherController.pause();
         root.removeCallbacks(showIdleClock);
         endReorder();   // Home or another app while reordering keeps the order so far
         wallpaperPlayer.stop();
@@ -1205,6 +1236,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (weatherController != null) weatherController.close();
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);

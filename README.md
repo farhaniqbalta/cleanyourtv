@@ -559,7 +559,8 @@ apps), which is why the report names that loss per package instead of calling it
 ## The launcher
 
 A small native home screen for Android TV: **about 518 KB**, plain Java, built for TVs with 1 GB of RAM.
-No blur, no video, no network permission, no background services.
+No blur, video or background services. The optional [weather header](docs/weather-header.md) uses
+the Internet permission for city search and forecasts while in use; it is off by default.
 
 The **TV** needs Android 8.0 (API 26) or newer: `minSdk` is a compile-time floor in
 [`launcher/app/build.gradle`](launcher/app/build.gradle), and the install script asks the TV for
@@ -619,8 +620,10 @@ and a wallpaper.
     transitions; they may use more memory) once animations are on.
   - **Open on start**, only with `open_on_start_choice`: Off, or an app that opens instead of Home the first
     time Home comes up after the TV starts. Once per boot, so Home and Back still reach the launcher.
-  - **Follow theme (reset on-TV choices)**, which clears every choice above. Pushing or resetting a theme
-    clears them too.
+  - **Show weather on Home** and **Weather city** turn the header on and choose a city. **Weather: follow
+    theme** clears the weather override; theme pushes and resets keep that override.
+  - **Follow theme (reset on-TV choices)** clears the layout, wallpaper, motion and start choices above.
+    Pushing or resetting a theme clears the layout, wallpaper and motion choices too.
   - **Choose default home** opens Android's home picker, and **TV system settings** the TV's own settings
     page.
 - **Change the default home:** Launcher settings and the optional Default-home tile
