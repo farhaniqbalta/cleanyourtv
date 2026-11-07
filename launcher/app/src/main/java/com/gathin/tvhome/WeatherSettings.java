@@ -37,6 +37,7 @@ final class WeatherSettings {
         followTheme = activity.findViewById(R.id.weatherFollowThemeChoice);
         toggle.setOnClickListener(v -> {
             this.enabled = !this.enabled;
+            if (!this.enabled) cancelSearch();
             choices.edit().putBoolean("weather_enabled", this.enabled).apply();
             changed.run();
             refresh();
@@ -45,6 +46,7 @@ final class WeatherSettings {
         followTheme.setOnClickListener(v -> {
             choices.edit().remove("weather_enabled").apply();
             this.enabled = Config.load(activity).weatherEnabled;
+            if (!this.enabled) cancelSearch();
             changed.run();
             refresh();
         });
@@ -72,8 +74,8 @@ final class WeatherSettings {
 
     private void search(String query) {
         if (query.trim().isEmpty()) return;
-        if (executor == null) executor = Executors.newSingleThreadExecutor();
         cancelSearch();
+        executor = Executors.newSingleThreadExecutor();
         int currentGeneration = ++generation;
         WeatherClient.Request currentRequest = new WeatherClient.Request();
         request = currentRequest;
@@ -105,14 +107,15 @@ final class WeatherSettings {
     void close() {
         closed = true;
         cancelSearch();
-        if (executor != null) executor.shutdownNow();
     }
 
     void cancelSearch() {
         generation++;
         if (request != null) request.cancel();
         if (task != null) task.cancel(true);
+        if (executor != null) executor.shutdownNow();
         request = null;
         task = null;
+        executor = null;
     }
 }

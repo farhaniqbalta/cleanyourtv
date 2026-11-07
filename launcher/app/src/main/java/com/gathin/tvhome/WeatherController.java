@@ -13,7 +13,7 @@ import org.json.JSONObject;
 final class WeatherController {
     private static final long REFRESH = 30 * 60_000L, RETRY = 5 * 60_000L;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executor;
     private final WeatherStore store;
     private final WeatherView view;
     private Future<?> task;
@@ -39,7 +39,9 @@ final class WeatherController {
     }
 
     void resume() {
+        if (active) return;
         active = true;
+        executor = Executors.newSingleThreadExecutor();
         view.setVisibility(View.GONE);
         int requestGeneration = ++generation;
         task = executor.submit(() -> {
@@ -124,10 +126,11 @@ final class WeatherController {
         request = null;
         if (task != null) task.cancel(true);
         task = null;
+        if (executor != null) executor.shutdownNow();
+        executor = null;
     }
 
     void close() {
         pause();
-        executor.shutdownNow();
     }
 }
