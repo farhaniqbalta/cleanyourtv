@@ -10,6 +10,7 @@
   "fill_dock": true,
   "show_greeting": false,
   "date_below_clock": true,
+  "weather_enabled": true,
   "top_menu": false,
   "icon_only_buttons": true,
   "icon_only_inputs": true,
