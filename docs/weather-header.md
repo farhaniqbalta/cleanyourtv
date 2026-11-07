@@ -22,3 +22,9 @@ The code is adapted from `addons/weather/.../Forecast.java` for geocoding, HTTP 
 weather codes. Hourly selection, caching, display and lifecycle scheduling are specific to the
 embedded header. The add-on remains a separate application. Weather text is provided in English
 and Indonesian; other launcher languages currently fall back to English for these labels.
+
+## Tested on
+
+The owner installed the weather launcher and confirmed it works on a Skyworth SWTV-22AE-FHD,
+Android 14, firmware UKNV.260211.001. The [TV screenshot](switches/weather_enabled.jpg) is
+cropped to exclude the city. The launcher release build, lint and unit tests passed.
