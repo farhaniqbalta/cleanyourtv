@@ -3,6 +3,8 @@
 The optional weather header shows the current temperature and the next four upcoming hours below
 the clock. It is off in the launcher defaults and enabled by the `minimalism_han` theme. It uses
 the launcher's embedded weather code; installing the separate Weather add-on is not required.
+The current line puts temperature and condition before the short city name. The forecast uses a
+compact four-column strip, monochrome vector icons and the launcher's locale-aware font family.
 
 Open **Launcher settings**, turn **Show weather on Home** on, and choose **Weather city**. Search
 for a city and select a match. The header stays hidden until a city is selected and a response is
