@@ -24,12 +24,11 @@ final class WeatherView extends LinearLayout {
         setOrientation(VERTICAL);
         setFocusable(false);
         setFocusableInTouchMode(false);
-        setPadding(0, dp(8), 0, 0);
+        setPadding(0, dp(14), 0, 0);
         boolean rtl = getResources().getBoolean(R.bool.rtl_menu_bar);
         if (rtl) setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         setVisibility(GONE);
         current = label(context, 15);
-        current.setTypeface(UiFont.get(context, R.string.font_medium));
         if (rtl) current.setGravity(Gravity.RIGHT);
         current.setSingleLine(true);
         current.setEllipsize(TextUtils.TruncateAt.END);
@@ -55,6 +54,7 @@ final class WeatherView extends LinearLayout {
             column.setFocusable(false);
             TextView time = label(getContext(), 12);
             time.setTextColor(Color.rgb(190, 190, 190));
+            time.setGravity(Gravity.CENTER);
             time.setSingleLine(true);
             time.setText(timeFormat.format(Date.from(hour.time)));
             column.addView(time);
@@ -62,15 +62,14 @@ final class WeatherView extends LinearLayout {
             icon.setImageResource(icon(hour.code));
             icon.setContentDescription(condition(hour.code));
             icon.setFocusable(false);
-            LinearLayout.LayoutParams iconLayout = new LinearLayout.LayoutParams(dp(22), dp(22));
-            iconLayout.topMargin = dp(5);
+            LinearLayout.LayoutParams iconLayout = new LinearLayout.LayoutParams(dp(18), dp(18));
+            iconLayout.topMargin = dp(4);
             column.addView(icon, iconLayout);
-            TextView temperature = label(getContext(), 15);
-            temperature.setTypeface(UiFont.get(getContext(), R.string.font_medium));
+            TextView temperature = label(getContext(), 14);
             temperature.setText(Math.round(hour.temperature) + "°");
             LinearLayout.LayoutParams temperatureLayout = new LinearLayout.LayoutParams(
                     LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            temperatureLayout.topMargin = dp(4);
+            temperatureLayout.topMargin = dp(2);
             column.addView(temperature, temperatureLayout);
             forecast.addView(column, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
         }
@@ -81,7 +80,7 @@ final class WeatherView extends LinearLayout {
     @Override protected void onMeasure(int widthSpec, int heightSpec) {
         int available = MeasureSpec.getSize(widthSpec);
         forecast.getLayoutParams().width = MeasureSpec.getMode(widthSpec) == MeasureSpec.UNSPECIFIED
-                ? dp(320) : Math.min(available, dp(320));
+                ? dp(280) : Math.min(available, dp(280));
         super.onMeasure(widthSpec, heightSpec);
     }
 
