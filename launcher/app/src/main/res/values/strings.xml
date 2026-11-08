@@ -149,4 +149,20 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
+    <string name="weather_toggle">Show weather on Home: %1$s</string>
+    <string name="weather_city">Weather city: %1$s</string>
+    <string name="weather_city_missing">Choose city</string>
+    <string name="weather_search">Search for a city</string>
+    <string name="weather_search_action">Search</string>
+    <string name="weather_no_results">No cities found or network unavailable</string>
+    <string name="weather_on">On</string>
+    <string name="weather_off">Off</string>
+    <string name="weather_follow_theme">Weather: follow theme</string>
+    <string name="weather_clear">Clear</string>
+    <string name="weather_cloudy">Cloudy</string>
+    <string name="weather_fog">Fog</string>
+    <string name="weather_snow">Snow</string>
+    <string name="weather_thunderstorm">Thunderstorm</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_unknown">Weather</string>
 </resources>
